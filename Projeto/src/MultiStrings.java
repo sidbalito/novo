@@ -77,6 +77,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	static Vector textos = new Vector();
 	public static Hashtable conceitos = new Hashtable();
 	public Texto currTexto;
+	private int numLines;
+	
 
 	public MultiStrings(MIDlet midlet) {
 		loadConceitos();
@@ -173,6 +175,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		gr = graphics;
 		width = gr.getClipWidth();
 		height = gr.getClipHeight();
+		numLines = height / fontHeight;
 		font = gr.getFont();
 		fontHeight = font.getHeight();
 		strLines = new Vector();
@@ -738,5 +741,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			listaTextos();
 		}
 
-
+		private int[] getNewPage() {
+			return new int[numLines];
+		}
 }
