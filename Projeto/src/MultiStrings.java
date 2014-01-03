@@ -24,6 +24,8 @@ import controle.Paginador;
 
 import tagparser.TagListener;
 import tagparser.TagParser;
+import visual.TextHint;
+import visual.Titulo;
 
 
 public class MultiStrings extends Canvas implements CommandListener, FileBrowserListener{
@@ -81,6 +83,9 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	public Texto currTexto;
 	private int numLines;
 	private Paginador paginador = new Paginador();
+	private int textTop;
+	private String text;
+	private Titulo titulo; 
 
 	public MultiStrings(MIDlet midlet) {
 		loadConceitos();
@@ -202,15 +207,17 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		//
 		pos = paginador.getPosicao(primeiraLinha);//getLine(primeiraLinha);
 		x = 0;
-		int y = 0;
-		gr.setColor(255, 255, 255);
-		gr.fillRect(0, 0, width, height);
-		gr.setColor(0);
 		int strWidth = 0;
 		lastLine = false;
 		screenLine = 0;
 		linha = primeiraLinha;
 		String s = null;
+		int y = 0;
+		gr.setColor(255, 255, 255);
+		gr.fillRect(0, 0, width, height);
+		gr.setColor(0);
+		text = currTexto.getTexto();
+		y = Titulo.HANDLE_HEIGHT;
 		while((y+fontHeight) < height){
 			int currPos = pos;
 			s = nextPart();
@@ -239,9 +246,13 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		}
 		//System.out.println("Ultima linha: "+pos +" de " + textLen);
 		//if(currHint.hasHint()) drawHint();
+		if(titulo != null){
+			y = titulo.drawTitle(gr, font);
+		}
 		if(currHint.hasHint()) currHint.drawHint(graphics, font);
 		//System.out.println(lines);
 	}
+
 
 	private String nextString(int i) {
 		if(i < strings.length) return strings[i];
@@ -449,7 +460,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			if(currTexto == null) return null;
 			int starPos = pos;
 			boolean isWord = false;
-			String text = currTexto.getTexto();
 			textLen = text.length();
 			while(pos < textLen){
 				char ch = Character.toLowerCase(text.charAt(pos));
@@ -680,6 +690,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			if(selectedIndex >= textos.size()) return;
 			currTexto = (Texto)textos.elementAt(selectedIndex);
 			if(currTexto == null || currTexto.getTexto() == null) return;
+			setTitle(currTexto.getTitulo());
 			textLen = currTexto.getTexto().length();
 			lines = new Vector();
 			pos = 0;
@@ -688,6 +699,43 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			//addLine(0);
 			paginador.storePosition(0, 0);
 		}
+
+		public void setTitle(String titulo) {
+			text = titulo;
+			Vector strings = new Vector();
+			String s = null;
+			StringBuffer sb = new StringBuffer();
+			int strWidth = 0;
+			do{
+				s = nextPart();
+				int currPos = pos;
+				s = nextPart();
+				if(s == null) {
+					lastLine = true;
+					break;
+				}
+				strWidth = font.stringWidth(s);
+				int y = 0;
+				if((x+strWidth) > width){
+					//System.out.println(linha);
+					y+=fontHeight;
+					linha++;
+					screenLine++;
+					if(linha > ultimaLinha) ultimaLinha = linha;
+					x = 0;
+					col = 0;
+					//addLine(currPos);
+					strings.addElement(sb.toString());
+					sb.setLength(0);
+				}
+				//addHint();
+				if((y+fontHeight) > height) break; 
+				sb.append(s);
+				x+=strWidth;
+			}while(s != null);
+			this.titulo = new Titulo(strings);
+		}
+
 
 		public void file(String path) {
 			display.setCurrent(new Carregando());
