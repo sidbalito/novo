@@ -20,6 +20,8 @@ import javax.microedition.midlet.MIDlet;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
+import controle.Paginador;
+
 import tagparser.TagListener;
 import tagparser.TagParser;
 
@@ -78,7 +80,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	public static Hashtable conceitos = new Hashtable();
 	public Texto currTexto;
 	private int numLines;
-	
+	private Paginador paginador = new Paginador();
 
 	public MultiStrings(MIDlet midlet) {
 		loadConceitos();
@@ -176,6 +178,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		width = gr.getClipWidth();
 		height = gr.getClipHeight();
 		numLines = height / fontHeight;
+		paginador.setLinhasPorPagina(numLines);
 		font = gr.getFont();
 		fontHeight = font.getHeight();
 		strLines = new Vector();
@@ -191,10 +194,13 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			deltaY = 0;
 			y1 = y2;
 		}
+		//TODO Primeira linha
 		if(primeiraLinha < 0) primeiraLinha = 0;
-		else if(primeiraLinha >=  lines.size()) primeiraLinha = lines.size()-1;
+		else if(primeiraLinha >=  paginador.getUltimaLinha()) primeiraLinha = paginador.getUltimaLinha();
+//		else if(primeiraLinha >=  lines.size()) primeiraLinha = lines.size()-1;
 		//System.out.println("Primeira: "+primeiraLinha);
-		pos = getLine(primeiraLinha);
+		//
+		pos = paginador.getPosicao(primeiraLinha);//getLine(primeiraLinha);
 		x = 0;
 		int y = 0;
 		gr.setColor(255, 255, 255);
@@ -222,7 +228,9 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				x = 0;
 				col = 0;
 				strLines.addElement(new Vector());
-				addLine(currPos);
+				//TODO AddLine
+				//addLine(currPos);
+				paginador.storePosition(linha, pos);
 			}
 			addHint();
 			if((y+fontHeight) > height) break; 
@@ -365,7 +373,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 							 }
 					}
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -587,7 +594,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				if(rs.getNumRecords() > 0){
 					xmlTextos = rs.getRecord(1);
 					//System.out.println(new String(xmlTextos));
-					new TagParser(new TaggedWords()).parse(xmlTextos);
+					if(xmlTextos != null) new TagParser(new TaggedWords()).parse(xmlTextos);
 					
 				}
 			} catch (Exception e) {
@@ -623,7 +630,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				
 				if(rs.getNumRecords() > 0){
 					xmlConceitos = rs.getRecord(1);
-					new TagParser(new TaggedWords()).parse(xmlConceitos);
+					if(xmlConceitos != null)new TagParser(new TaggedWords()).parse(xmlConceitos);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -677,7 +684,9 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			lines = new Vector();
 			pos = 0;
 			primeiraLinha = 0;
-			addLine(0);
+			//TODO AddLine
+			//addLine(0);
+			paginador.storePosition(0, 0);
 		}
 
 		public void file(String path) {
@@ -741,7 +750,4 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			listaTextos();
 		}
 
-		private int[] getNewPage() {
-			return new int[numLines];
-		}
 }
