@@ -1,0 +1,7 @@
+MIDlet-1: Touch,,Touch
+MIDlet-Jar-URL: Projeto.jar
+MIDlet-Name: Projeto
+MIDlet-Vendor: Sidnei Aparecido Teixeira Batista
+MIDlet-Version: 1.0.17
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0
