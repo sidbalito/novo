@@ -14,18 +14,14 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
-import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.List;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
-import controle.Paginador;
-
-import tagparser.TagListener;
 import tagparser.TagParser;
 import visual.TextHint;
-import visual.Titulo;
+import controle.Paginador;
 
 
 public class MultiStrings extends Canvas implements CommandListener, FileBrowserListener{
