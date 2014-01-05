@@ -52,6 +52,14 @@ public class Texto {
 	}
 
 	public void addTexto(String text) {
+		if(texto.length() == 0){
+			int i = 0, len = text.length();
+			while(i < len){
+				if(text.charAt(i) != '\n') break;
+				i++;
+			}
+			texto.append(text.substring(i));
+		}
 		texto.append(text);
 	}
 	

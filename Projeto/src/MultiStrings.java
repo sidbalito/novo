@@ -85,9 +85,17 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private Paginador paginador = new Paginador();
 	private int textTop;
 	private String text;
-	private Titulo titulo; 
+	private Titulo titulo;
+	private boolean breakLine;
+	private boolean doBreak; 
 
 	public MultiStrings(MIDlet midlet) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		loadConceitos();
 		loadTextos();
 		loadBookmarks();
@@ -226,19 +234,20 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				break;
 			}
 			strWidth = font.stringWidth(s);
-			if((x+strWidth) > width){
+			if(doBreak||(x+strWidth) > width){
 				//System.out.println(linha);
 				y+=fontHeight;
 				linha++;
-				screenLine++;
+				screenLine++; 
 				if(linha > ultimaLinha) ultimaLinha = linha;
 				x = 0;
 				col = 0;
 				strLines.addElement(new Vector());
 				//TODO AddLine
 				//addLine(currPos);
-				paginador.storePosition(linha, pos);
+				paginador.storePosition(linha, currPos);
 			}
+			doBreak = breakLine; 
 			addHint();
 			if((y+fontHeight) > height) break; 
 			gr.drawString(s, x, y, 0);
@@ -392,7 +401,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			currHint.clearHint();
 			repaint();
 		}
-
+		titulo.atPosition(x, y);
 		pressedAt = System.currentTimeMillis();
 		this.y1 = y;
 	}
@@ -402,6 +411,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		dragged = false;
 		released = true;
 		showHintRunner = null;
+		titulo.cancelaExibir();
 	}
 	
 	 protected void pointerDragged(int x, int y) {
@@ -458,22 +468,27 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 
 		private String nextPart() {
 			if(currTexto == null) return null;
-			int starPos = pos;
+			int startPos = pos;
 			boolean isWord = false;
 			textLen = text.length();
+			breakLine = false;
 			while(pos < textLen){
 				char ch = Character.toLowerCase(text.charAt(pos));
+				if(ch == '\n') breakLine = true;
 				boolean isAlpha = (ch >= 'a') && (ch <= 'z');
-				if(!isWord && pos == starPos && isAlpha) isWord = true;
+				if(!isWord && pos == startPos && isAlpha) isWord = true;
 				if(!isWord && isAlpha) break;
 				if(isWord && !isAlpha){
-					hint = text.substring(starPos, pos);
+					hint = text.substring(startPos, pos);
 					isWord = false;
 				}
 				pos++;
 			}
-			if(starPos == pos) return null;
-			return text.substring(starPos, pos);
+			if(breakLine && pos-startPos == 1) return "";
+			if(startPos == pos) return null;
+			int endPos = pos;
+			if(breakLine)endPos--;
+			return text.substring(startPos, endPos);
 		}
 
 
@@ -706,9 +721,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			String s = null;
 			StringBuffer sb = new StringBuffer();
 			int strWidth = 0;
+			pos = 0;
 			do{
-				s = nextPart();
-				int currPos = pos;
 				s = nextPart();
 				if(s == null) {
 					lastLine = true;
@@ -717,14 +731,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				strWidth = font.stringWidth(s);
 				int y = 0;
 				if((x+strWidth) > width){
-					//System.out.println(linha);
-					y+=fontHeight;
-					linha++;
-					screenLine++;
-					if(linha > ultimaLinha) ultimaLinha = linha;
 					x = 0;
-					col = 0;
-					//addLine(currPos);
 					strings.addElement(sb.toString());
 					sb.setLength(0);
 				}
@@ -733,7 +740,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				sb.append(s);
 				x+=strWidth;
 			}while(s != null);
-			this.titulo = new Titulo(strings);
+			strings.addElement(sb.toString());
+			this.titulo = new Titulo(strings, this);
 		}
 
 

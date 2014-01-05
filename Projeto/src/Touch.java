@@ -26,7 +26,9 @@ public class Touch extends MIDlet {
 		// TODO Auto-generated method stub
 		Display display = Display.getDisplay(this);
 		Carregando.setDisplay(display);
-		Displayable displayable = new MultiStrings(this);
+		Displayable displayable = new Carregando();
+		display.setCurrent(displayable);
+		displayable = new MultiStrings(this);
 		display.setCurrent(displayable);
 	}
 
