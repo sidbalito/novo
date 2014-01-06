@@ -14,18 +14,15 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
-import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.List;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
-import controle.Paginador;
-
-import tagparser.TagListener;
 import tagparser.TagParser;
 import visual.TextHint;
 import visual.Titulo;
+import controle.Paginador;
 
 
 public class MultiStrings extends Canvas implements CommandListener, FileBrowserListener{
@@ -35,29 +32,20 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private static final String STR_CONCEITOS = "conceitos";
 	private static final String STR_BOOKMARKS = "bookmarks";
 	private static final long MIN_TIME = 500; 
-	private String[] strings = new String[]{"Texto1 ", "texto2"} ;
 	private int height;
 	private int width;
-	private Vector lines= new Vector();
 	private int primeiraLinha, ultimaLinha;
 	private int y1;
 	private int y2;
 	private boolean lastLine;
-	private Vector pStrings = new Vector();
 	private Vector strLines = new Vector();
 	private int fontHeight = 1;
 	private int linha;
 	private int screenLine;
-	private int hintHeight;
 	private Graphics gr;
 	private Font font;
-	private int hintTop;
-	private int hintWidth;
-	private int hintLeft;
 	private String hint;
 	TextHint currHint = new TextHint();
-	private boolean showHint;
-	private int col;
 	Runnable hideHintRunner, showHintRunner;
 	private int pos;
 	private int textLen;
@@ -76,26 +64,18 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private Command cmdPalvras = new Command("Palavras", Command.ITEM, 0);
 	private boolean dragged;
 	private boolean fileAdded;
-	private long pressedAt;
 	private List lista;
 	static Vector textos = new Vector();
 	public static Hashtable conceitos = new Hashtable();
 	public Texto currTexto;
 	private int numLines;
 	private Paginador paginador = new Paginador();
-	private int textTop;
 	private String text;
 	private Titulo titulo;
 	private boolean breakLine;
 	private boolean doBreak; 
 
 	public MultiStrings(MIDlet midlet) {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		loadConceitos();
 		loadTextos();
 		loadBookmarks();
@@ -166,25 +146,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	}
 
 
-	private void addLine(int i) {
-		int size = lines.size()-1;
-		if(size > 0){
-			if(getLine(size)>i) {
-				//System.out.println("Cancela adição de linha.");
-				return;
-			}
-		}
-		lines.addElement(new Integer(i));
-	}
-	
-	private int getLine(int i){
-		if(lines == null || lines.size() <= 0) return 0;
-		int valor = ((Integer)lines.elementAt(i)).intValue();
-		//System.out.println("getLine: "+valor);
-		return valor;
-	}
-
-
 	protected void paint(Graphics graphics) {
 		if(currTexto == null && textos.size() > 0 && display != null) listaTextos();
 		gr = graphics;
@@ -224,7 +185,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		gr.setColor(255, 255, 255);
 		gr.fillRect(0, 0, width, height);
 		gr.setColor(0);
-		text = currTexto.getTexto();
+		if(currTexto != null) text = currTexto.getTexto();
 		y = Titulo.HANDLE_HEIGHT;
 		while((y+fontHeight) < height){
 			int currPos = pos;
@@ -241,7 +202,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				screenLine++; 
 				if(linha > ultimaLinha) ultimaLinha = linha;
 				x = 0;
-				col = 0;
 				strLines.addElement(new Vector());
 				//TODO AddLine
 				//addLine(currPos);
@@ -263,84 +223,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	}
 
 
-	private String nextString(int i) {
-		if(i < strings.length) return strings[i];
-		return null;
-	}
-
-
-	private String nextString(int i, int x, int strWidth){
-		if(currTexto == null) return null;
-		int line =  linha;
-		int pos = i;
-		String text = currTexto.getTexto();
-		int len = text.length();
-		int wordEnd = 0;
-		boolean nextWord = false, isAlpha = false;
-		while(pos < len){
-			char ch = Character.toLowerCase(text.charAt(pos));
-			isAlpha = (ch < 'a' || ch > 'z');
-			if(isAlpha){
-				nextWord = true;
-				wordEnd = pos; 
-			} else if(nextWord) break;
-			pos++;
-		}
-		String s = text.substring(i, pos);
-		//System.out.println("line: "+line+" strLines.size: "+strLines.size());
-		while(line >= strLines.size()) {
-			strLines.addElement(new Vector());
-			col = 0;
-		}
-		//System.out.println("Linhas: "+strLines.size()+" line: "+line);
-		pStrings = (Vector) strLines.elementAt(line);
-		String word = text.substring(i, wordEnd);
-		if(pStrings.size() >= (col)) pStrings.addElement(new PositionedString(word, x, font.stringWidth(word)));
-		col++;
-		return s; 		
-		
-	}
-	private String nextString(String s, int x, int strWidth){
-		if(s == null) return null;
-		int line =  linha;
-
-		//System.out.println("line: "+line+" strLines.size: "+strLines.size());
-		if(line >= strLines.size()) {
-			strLines.addElement(new Vector());
-			col = 0;
-		}
-		//System.out.println("Linhas: "+strLines.size()+" line: "+line);
-		pStrings = (Vector) strLines.elementAt(line);
-		//System.out.println("Linha: "+linha+" ultima: " +ultimaLinha);
-		if(pStrings.size() >= col && linha >= ultimaLinha) pStrings.addElement(new PositionedString(s, x, strWidth));
-		col++;
-		return s; 		
-	}
-	
-	private String getString(int i, int x, int strWidth) {
-		String str = nextString(i);
-		if(str == null)	return null;
-		int line =  linha;
-		while(line >= strLines.size()) strLines.addElement(new Vector());
-		pStrings = (Vector) strLines.elementAt(line);
-		int desl = ((Integer)lines.elementAt(line)).intValue();
-		if(desl > 0) desl = 0;
-		//System.out.println("Desl: "+desl+" i-desl: "+(i-desl) + " pStrings.size(): " + pStrings.size());
-		if(pStrings.size() >= (i-desl)) pStrings.addElement(new PositionedString(str, x, strWidth));
-		return pStrings.elementAt(i-desl).toString();
-	}
-	
-	private String getString(int xPos, int yPos){
-		int linha = yPos / fontHeight;
-		Vector pStrings = (Vector) strLines.elementAt(linha+primeiraLinha);
-		//System.out.println(pStrings);
-		for(int i = 0; i < pStrings.size(); i++){
-			PositionedString ps = ((PositionedString) pStrings.elementAt(i));
-			if (ps.isPosition(xPos)) return ps.toString();
-		}
-		return null;
-	}
-
 	private PositionedString getPositionedString(int xPos, int yPos){
 		int linha = (yPos / fontHeight);
 		if(linha >= strLines.size()) return null;
@@ -355,7 +237,9 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 
 
 	protected void pointerPressed(final int x, final int y) {
-		if(!currHint.hasHint())new Thread(new Runnable() {
+		final int posy = y+Titulo.HANDLE_HEIGHT;
+		
+		if(!titulo.atPosition(x, posy) && !currHint.hasHint())new Thread(new Runnable() {
 			
 			public void run() {
 				try {
@@ -367,13 +251,12 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 					System.out.println("ShowHintRunner: "+showHintRunner);
 					if(showHintRunner != this) return;
 					if(!released){
-						PositionedString ps = getPositionedString(x, y);
+						PositionedString ps = getPositionedString(x, posy);
 						if(ps != null){	
-							int linha = y/fontHeight;
+							int linha = posy/fontHeight;
 							int top = linha * fontHeight;
 							int left = ps.getX();
 							currHint.setHint(ps.toString(), left, top);
-							showHint = true;
 							repaint();
 							 new Thread(new Runnable() {		
 
@@ -401,13 +284,11 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			currHint.clearHint();
 			repaint();
 		}
-		titulo.atPosition(x, y);
-		pressedAt = System.currentTimeMillis();
-		this.y1 = y;
+		System.currentTimeMillis();
+		this.y1 = posy;
 	}
 
 	protected void pointerReleased(int x, int y) {
-		pressedAt = 0;
 		dragged = false;
 		released = true;
 		showHintRunner = null;
@@ -424,49 +305,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	 
  
 	 
-	 private void showHint(PositionedString hint, int yPos){
-		 if(hint == null) return; 
-		 //this.currHint = hint.toString(); 
-		 //hintWidth = font.stringWidth(this.currHint) + 2;
-		 if(hintHeight == 0) hintHeight = font.getHeight()+2; 
-		 int linha = yPos/fontHeight;
-		 int y = linha * fontHeight;
-		 /*if((y + (hintHeight >> 1)) >= height) 
-		 else//*/ 
-		 hintTop = y - hintHeight;
-		 if(hintTop < 0)hintTop = y + hintHeight;
-		 int x = hint.getX();
-		 if(x + hintWidth > width) hintLeft = width - hintWidth;
-		 else hintLeft = x;
-		 showHint = true;
-		 repaint();
-		 new Thread(new Runnable() {		
-
-			public void run() {
-				try {
-					hideHintRunner = this;
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} finally{
-					if(hideHintRunner != this) return;
-					showHint = false;
-					repaint();
-				}
-			}
-		}).start();
-	 }
-	 
-	 private void drawHint(){
-		 //System.out.println("drawHint");
-		 gr.setColor(255, 255, 0);
-		 gr.fillRect(hintLeft, hintTop, hintWidth, hintHeight);
-		 gr.setColor(0);
-		 gr.drawRect(hintLeft, hintTop, hintWidth, hintHeight);
-		 gr.drawString(currHint.toString(), hintLeft+1, hintTop+1, 0);
-	 }
-
-		private String nextPart() {
+	 private String nextPart() {
 			if(currTexto == null) return null;
 			int startPos = pos;
 			boolean isWord = false;
@@ -542,7 +381,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			lstBookmarks.setSelectCommand(cmdSelecionar);
 			lstBookmarks.addCommand(cmdExcluir);
 			lstBookmarks.addCommand(cmdVoltar);
-			final FileBrowser fb = new FileBrowser(this);
+			final FileBrowserListener fbl = this;
+			//final FileBrowser fb = new FileBrowser(this);
 			lstBookmarks.setCommandListener(new CommandListener() {
 				boolean modoExcluir; 
 				public void commandAction(Command cmd, Displayable dsp) {
@@ -554,6 +394,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 							lstBookmarks.delete(selected);
 							bookmarks.removeElementAt(selected);
 						} else {
+							FileBrowser fb = new FileBrowser(fbl);
 							estrutrado = false;
 							fb.setPath(lstBookmarks.getString(lstBookmarks.getSelectedIndex()));
 							display.setCurrent(fb);
@@ -707,7 +548,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			if(currTexto == null || currTexto.getTexto() == null) return;
 			setTitle(currTexto.getTitulo());
 			textLen = currTexto.getTexto().length();
-			lines = new Vector();
+			new Vector();
 			pos = 0;
 			primeiraLinha = 0;
 			//TODO AddLine

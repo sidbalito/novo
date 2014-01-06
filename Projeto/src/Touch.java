@@ -28,6 +28,12 @@ public class Touch extends MIDlet {
 		Carregando.setDisplay(display);
 		Displayable displayable = new Carregando();
 		display.setCurrent(displayable);
+		try {
+//			Thread.sleep(2000);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		displayable = new MultiStrings(this);
 		display.setCurrent(displayable);
 	}

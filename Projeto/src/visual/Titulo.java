@@ -73,9 +73,10 @@ public class Titulo {
 		if(!show)runnable = null;
 	}
 
-	public void atPosition(int x, int y) {
+	public boolean atPosition(int x, int y) {
 		if(y > titleBottom && y < titleBottom+HANDLE_HEIGHT){
 			solicitaExibir();
 		}
+		return y < titleBottom+HANDLE_HEIGHT;
 	}
 }
