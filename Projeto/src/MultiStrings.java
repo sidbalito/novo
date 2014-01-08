@@ -54,7 +54,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private Command cmdImportar = new Command("Importar", Command.ITEM, 0);
 	private Command cmdAbrir = new Command("Abrir", Command.ITEM, 0);
 	private Command cmdSair = new Command("Sair", Command.ITEM, 0);
-	private Command cmdTextos = new Command("Textos", Command.ITEM, 0);
+	private Command cmdTextos = new Command("Não Lidos", Command.ITEM, 0);
+	private Command cmdLidos = new Command("Lidos", Command.ITEM, 0);
 	private Command cmdBookmarks = new Command("Favoritos", Command.ITEM, 0);
 	private MIDlet midlet;
 	private InputStream in;
@@ -65,8 +66,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private boolean dragged;
 	private boolean fileAdded;
 	private List lista;
-	static Vector textos = new Vector();
-	public static Hashtable conceitos = new Hashtable();
+	static Vector textos = new Vector(), lidos = new Vector();
+	public static Hashtable dicionarioGlobal = new Hashtable();
 	public Texto currTexto;
 	private int numLines;
 	private Paginador paginador = new Paginador();
@@ -147,7 +148,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 
 
 	protected void paint(Graphics graphics) {
-		if(currTexto == null && textos.size() > 0 && display != null) listaTextos();
+		if(currTexto == null && textos.size() > 0 && display != null) listaTextos(MultiStrings.textos);
 		gr = graphics;
 		width = gr.getClipWidth();
 		height = gr.getClipHeight();
@@ -223,38 +224,42 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	}
 
 
-	private PositionedString getPositionedString(int xPos, int yPos){
+	private PositionedString getPositionedString(int x, int y){
+		
+		int yPos = y;// + titulo.HANDLE_HEIGHT;
 		int linha = (yPos / fontHeight);
+		System.out.println("Linha: "+linha);
 		if(linha >= strLines.size()) return null;
 		Vector pStrings = (Vector) strLines.elementAt(linha);
 		//System.out.println("Linha: "+pStrings +" - " + linha + " de "+strLines.size());
 		for(int i = 0; i < pStrings.size(); i++){
 			PositionedString ps = ((PositionedString) pStrings.elementAt(i));
-			if (ps.isPosition(xPos)) return ps;
+			if (ps.isPosition(x)) return ps;
 		}
 		return null;
 	}
 
 
 	protected void pointerPressed(final int x, final int y) {
-		final int posy = y+Titulo.HANDLE_HEIGHT;
+		final int posy = y - Titulo.HANDLE_HEIGHT;
 		
-		if(!titulo.atPosition(x, posy) && !currHint.hasHint())new Thread(new Runnable() {
+		if(!titulo.atPosition(x, y) && !currHint.hasHint())new Thread(new Runnable() {
 			
 			public void run() {
 				try {
 					released = false;
 					showHintRunner = this;
-					System.out.println("Show solictado: "+this);
+					//System.out.println("Show solictado: "+this);
 					Thread.sleep(MIN_TIME);
-					System.out.println("Show timeout: "+this);
-					System.out.println("ShowHintRunner: "+showHintRunner);
+					//System.out.println("Show timeout: "+this);
+					//System.out.println("ShowHintRunner: "+showHintRunner);
 					if(showHintRunner != this) return;
 					if(!released){
 						PositionedString ps = getPositionedString(x, posy);
 						if(ps != null){	
 							int linha = posy/fontHeight;
-							int top = linha * fontHeight;
+							System.out.println();
+							int top = linha * fontHeight + Titulo.HANDLE_HEIGHT;
 							int left = ps.getX();
 							currHint.setHint(ps.toString(), left, top);
 							repaint();
@@ -335,7 +340,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			Vector ps = (Vector) strLines.elementAt(screenLine);
 			//System.out.println(conceitos);
 			String s = null;
-			if(hint != null) s = (String) conceitos.get(hint.toLowerCase());
+			if(hint != null) s = (String) dicionarioGlobal.get(hint.toLowerCase());
 			if(s == null) return;
 			PositionedString curHint = new PositionedString(s, x, font.stringWidth(hint));
 			ps.addElement(curHint);
@@ -354,8 +359,10 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				listBookmarks(this);
 			} else if (cmd == cmdImportar) {
 				importa();
+			} else if(cmd == cmdLidos){
+				listaTextos(lidos);
 			} else if (cmd == cmdTextos){
-				listaTextos();
+				listaTextos(MultiStrings.textos);
 			}
 		}
 
@@ -419,7 +426,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		}
 
 
-		private void listaTextos() {
+		private void listaTextos(Vector vTextos) {
+			Vector textos = vTextos;
 			lista.deleteAll();
 			for(int i = 0; i < textos.size(); i++){
 				Object element = textos.elementAt(i);
@@ -428,6 +436,10 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 					if(s != null)lista.append(s, null);
 				}
 				
+			}
+			if(currTexto != null) {
+				int currIndex = textos.indexOf(currTexto);
+				if(currIndex > 0 & currIndex < textos.size()) lista.setSelectedIndex(currIndex, true);
 			}
 			//System.out.println(display);
 			display.setCurrent(lista);
@@ -453,6 +465,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 
 
 		private void loadTextos(){
+			if(textos == null || textos.size() > 0) return;
 			try {
 				RecordStore rs = RecordStore.openRecordStore(STR_TEXTOS, true);
 				byte[] xmlTextos = null;
@@ -507,7 +520,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		private void saveConceitos() {
 			try {
 				RecordStore rs = RecordStore.openRecordStore(STR_CONCEITOS, true);
-				String xmlConceitos = xml(conceitos);
+				String xmlConceitos = xml(dicionarioGlobal);
 				if(rs.getNumRecords() <= 0)rs.addRecord(xmlConceitos.getBytes(), 0, xmlConceitos.length());
 				else rs.setRecord(1, xmlConceitos.getBytes(), 0, xmlConceitos.length());
 			} catch (RecordStoreException e) {
@@ -548,6 +561,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			if(currTexto == null || currTexto.getTexto() == null) return;
 			setTitle(currTexto.getTitulo());
 			textLen = currTexto.getTexto().length();
+			System.out.println("Tamanho: "+textLen);
 			new Vector();
 			pos = 0;
 			primeiraLinha = 0;
@@ -644,7 +658,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				return;
 			}
 			fileAdded = false;
-			listaTextos();
+			listaTextos(MultiStrings.textos);
 		}
 
 }

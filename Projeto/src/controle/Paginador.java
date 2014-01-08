@@ -9,6 +9,7 @@ public class Paginador {
 	private int ultimaLinha;
 
 	public void storePosition(int linha, int posicao){
+		//System.out.println("Linha: "+linha+" posição: "+posicao);
 		int numPagina = linha / linhasPorPagina;
 		int indice = linha % linhasPorPagina;
 		if(linha > ultimaLinha)ultimaLinha = linha;

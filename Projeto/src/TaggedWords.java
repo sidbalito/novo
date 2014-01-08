@@ -18,7 +18,7 @@ public class TaggedWords implements TagListener {
 	private static final int TITULO = 4;
 	private int modo;
 	private Texto texto = new Texto();
-	private Hashtable conceitos = MultiStrings.conceitos;
+	private Hashtable dicionario = MultiStrings.dicionarioGlobal;
 	private Object conceito;
 	private Vector textos = MultiStrings.textos;
 	private Stack modos = new Stack();
@@ -44,7 +44,7 @@ public class TaggedWords implements TagListener {
 			conceito = text.toLowerCase();
 		break;
 		case DEFINICAO:
-			conceitos.put(conceito, text);
+			dicionario.put(conceito, text);
 		break;
 		case TEXTO:
 			texto.addTexto(text);

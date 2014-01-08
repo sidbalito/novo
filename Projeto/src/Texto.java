@@ -59,6 +59,7 @@ public class Texto {
 				i++;
 			}
 			texto.append(text.substring(i));
+			return;
 		}
 		texto.append(text);
 	}
