@@ -23,6 +23,7 @@ import tagparser.TagParser;
 import visual.TextHint;
 import visual.Titulo;
 import controle.Paginador;
+import controle.TextBreaker;
 
 
 public class MultiStrings extends Canvas implements CommandListener, FileBrowserListener{
@@ -74,7 +75,8 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 	private String text;
 	private Titulo titulo;
 	private boolean breakLine;
-	private boolean doBreak; 
+	private boolean doBreak;
+	private TextBreaker textBreaker;
 
 	public MultiStrings(MIDlet midlet) {
 		loadConceitos();
@@ -169,13 +171,12 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			deltaY = 0;
 			y1 = y2;
 		}
-		//TODO Primeira linha
 		if(primeiraLinha < 0) primeiraLinha = 0;
 		else if(primeiraLinha >=  paginador.getUltimaLinha()) primeiraLinha = paginador.getUltimaLinha();
 //		else if(primeiraLinha >=  lines.size()) primeiraLinha = lines.size()-1;
 		//System.out.println("Primeira: "+primeiraLinha);
 		//
-		pos = paginador.getPosicao(primeiraLinha);//getLine(primeiraLinha);
+		setPos(paginador.getPosicao(primeiraLinha));//getLine(primeiraLinha);
 		x = 0;
 		int strWidth = 0;
 		lastLine = false;
@@ -186,11 +187,11 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 		gr.setColor(255, 255, 255);
 		gr.fillRect(0, 0, width, height);
 		gr.setColor(0);
-		if(currTexto != null) text = currTexto.getTexto();
+		//if(currTexto != null) setText(currTexto.getTexto());
 		y = Titulo.HANDLE_HEIGHT;
 		while((y+fontHeight) < height){
-			int currPos = pos;
-			s = nextPart();
+			int currPos = getPos();
+			s = textBreaker.nextPart();
 			if(s == null) {
 				lastLine = true;
 				break;
@@ -204,7 +205,6 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 				if(linha > ultimaLinha) ultimaLinha = linha;
 				x = 0;
 				strLines.addElement(new Vector());
-				//TODO AddLine
 				//addLine(currPos);
 				paginador.storePosition(linha, currPos);
 			}
@@ -563,10 +563,11 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			textLen = currTexto.getTexto().length();
 			System.out.println("Tamanho: "+textLen);
 			new Vector();
-			pos = 0;
+			setPos(0);
 			primeiraLinha = 0;
-			//TODO AddLine
 			//addLine(0);
+			if(currTexto != null) setText(currTexto.getTexto());
+			paginador = new Paginador();
 			paginador.storePosition(0, 0);
 		}
 
@@ -576,7 +577,7 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			String s = null;
 			StringBuffer sb = new StringBuffer();
 			int strWidth = 0;
-			pos = 0;
+			setPos(0);
 			do{
 				s = nextPart();
 				if(s == null) {
@@ -661,4 +662,20 @@ public class MultiStrings extends Canvas implements CommandListener, FileBrowser
 			listaTextos(MultiStrings.textos);
 		}
 
+		public void setText(String text) {
+			this.text = text;
+			textBreaker = new TextBreaker(text);
+		}
+
+
+		private int getPos() {
+			if(textBreaker == null) return 0;
+			return textBreaker.getPos();
+		}
+
+
+		private void setPos(int pos) {
+			if(textBreaker == null) return;
+			textBreaker.setPos(pos);
+		}
 }
